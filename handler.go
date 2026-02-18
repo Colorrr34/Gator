@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/colorrr34/gator/internal/database"
@@ -186,30 +185,8 @@ func handlerUnfollow(s *state, cmd command, user database.User)error{
 }
 
 func handlerBrowse(s *state, cmd command, user database.User)error{
-	limit := 2
-	feedName := "default"
-
-	switch len(cmd.arg){
-	case 0:
-	case 1:
-		firstArg := cmd.arg[0]
-		intArg,err:= strconv.Atoi(firstArg)
-		if err != nil{
-			feedName = firstArg
-		}else{
-			limit = intArg
-		}
-	case 2:
-		feedName = cmd.arg[0]
-		secArg,err:= strconv.Atoi(cmd.arg[1])
-		if err !=nil{
-			return err
-		}
-		limit = secArg
-	default:
-		return errors.New("too many arguments")
-	}
-	fmt.Println(limit,feedName)
+	limit := cmd.params.limit
+	feedName := cmd.params.feedName
 		
 	posts := []printPost{}
 

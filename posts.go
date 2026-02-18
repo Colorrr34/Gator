@@ -6,6 +6,11 @@ import (
 	"github.com/colorrr34/gator/internal/database"
 )
 
+type printPost struct{
+	Post database.Post
+	FeedName string
+}
+
 func getPostsForUser(s *state, user database.User, limit int) ([]printPost ,error){
 	posts := []printPost{}
 	dbPosts, err := s.db.GetPostsForUser(context.Background(),database.GetPostsForUserParams{

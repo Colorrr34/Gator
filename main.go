@@ -2,8 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"flag"
 	"log"
-	"os"
 
 	"github.com/colorrr34/gator/internal/config"
 	"github.com/colorrr34/gator/internal/database"
@@ -18,6 +18,7 @@ type state struct{
 type command struct{
 	name string
 	arg []string
+	params params
 }
 
 type commands struct{
@@ -40,13 +41,12 @@ type RSSItem struct {
 	PubDate     string `xml:"pubDate"`
 }
 
-type printPost struct{
-	Post database.Post
-	FeedName string
+type params struct{
+	limit int
+	feedName string
 }
 
 func main(){
-	
 	cfg := config.Read()
 	db, err := sql.Open("postgres", cfg.DbUrl)
 	if err != nil{
@@ -61,7 +61,6 @@ func main(){
 	c:= commands{
 		cmdMap: cmdMap,
 	}
-	
 
 	(&c).register("login",handlerLogin)
 	(&c).register("register",handlerRegister)
@@ -74,14 +73,23 @@ func main(){
 	(&c).register("following",middlewareLoggedIn(handlerFollowing))
 	(&c).register("unfollow",middlewareLoggedIn(handlerUnfollow))
 	(&c).register("browse",middlewareLoggedIn(handlerBrowse))
-	args := os.Args
-	if len(args)<2{
+	
+	var params params
+	flag.IntVar(&params.limit,"limit",5,"limit")
+	flag.StringVar(&params.feedName,"feed","default","feed name")
+	flag.Parse()
+	args := flag.Args()
+	if len(args)<1{
 		log.Fatal("Insufficient arguments")
 	}
 	if (cfg)==(config.Config{}){
 		log.Fatal("Empty Config")
 	}
-	if err:= c.run(&cfgState,command{name:args[1],arg:args[2:]});err!=nil{
+	if err:= c.run(&cfgState,command{
+		name:args[0],
+		arg:args[1:],
+		params: params,
+		});err!=nil{
 		log.Fatal(err)
 	}
 }
