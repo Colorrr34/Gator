@@ -40,6 +40,11 @@ type RSSItem struct {
 	PubDate     string `xml:"pubDate"`
 }
 
+type printPost struct{
+	Post database.Post
+	FeedName string
+}
+
 func main(){
 	
 	cfg := config.Read()

@@ -19,6 +19,10 @@ ON feeds.user_id = users.id;
 SELECT * FROM feeds
 WHERE url = $1;
 
+-- name: GetFeedByName :one
+SELECT * FROM feeds
+WHERE name = $1;
+
 -- name: MarkFeedFetched :exec
 UPDATE feeds
 SET (updated_at, last_fetched_at) = (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)

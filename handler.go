@@ -187,25 +187,47 @@ func handlerUnfollow(s *state, cmd command, user database.User)error{
 
 func handlerBrowse(s *state, cmd command, user database.User)error{
 	limit := 2
-	if len(cmd.arg)==1{
-		i, err := strconv.Atoi(cmd.arg[0])
+	feedName := "default"
+
+	switch len(cmd.arg){
+	case 0:
+	case 1:
+		firstArg := cmd.arg[0]
+		intArg,err:= strconv.Atoi(firstArg)
 		if err != nil{
+			feedName = firstArg
+		}else{
+			limit = intArg
+		}
+	case 2:
+		feedName = cmd.arg[0]
+		secArg,err:= strconv.Atoi(cmd.arg[1])
+		if err !=nil{
 			return err
 		}
-		limit = i
+		limit = secArg
+	default:
+		return errors.New("too many arguments")
 	}
-	if len(cmd.arg)>1{
-		return errors.New("Too many arguments")
-	}
-	posts, err := s.db.GetPostsForUser(context.Background(),database.GetPostsForUserParams{
-		UserID: user.ID,
-		Limit: int32(limit),
-	})
-	if err != nil{
-		return err
+	fmt.Println(limit,feedName)
+		
+	posts := []printPost{}
+
+	if feedName == "default" {
+		dbPosts,err:=getPostsForUser(s,user,limit)
+		if err !=nil{
+			return err
+		}
+		posts = dbPosts
+		}else{
+		dbPosts,err:=getPostsForUserAndFeed(s,user,limit,feedName)
+		if err !=nil{
+			return err
+		}
+		posts = dbPosts
 	}
 	for _, post := range posts{
-		fmt.Printf("Title: %s\nLink: %s\nDescription: %s\nPublished at: %v\n",post.Title,post.Url,post.Description.String,post.PublishedAt.Time)
+		fmt.Printf("\n\nTitle: %s\nLink: %s\nDescription: %s\nPublished at: %v\nFeed Name: %s",post.Post.Title,post.Post.Url,post.Post.Description.String,post.Post.PublishedAt.Time, post.FeedName)
 	}
 	return nil
 }

@@ -137,3 +137,88 @@ func (q *Queries) GetPostsForUser(ctx context.Context, arg GetPostsForUserParams
 	}
 	return items, nil
 }
+
+const getPostsForUserAndFeed = `-- name: GetPostsForUserAndFeed :many
+SELECT posts.id, posts.created_at, posts.updated_at, title, posts.url, description, published_at, posts.feed_id, feeds.id, feeds.created_at, feeds.updated_at, last_fetched_at, name, feeds.url, feeds.user_id, feed_follows.id, feed_follows.created_at, feed_follows.updated_at, feed_follows.user_id, feed_follows.feed_id FROM posts
+LEFT JOIN feeds
+ON posts.feed_id = feeds.id
+LEFT JOIN feed_follows
+ON feeds.id = feed_follows.feed_id
+WHERE feed_follows.user_id = $1
+AND feeds.name = $2
+ORDER BY published_at DESC NULLS LAST
+LIMIT $3
+`
+
+type GetPostsForUserAndFeedParams struct {
+	UserID uuid.UUID
+	Name   string
+	Limit  int32
+}
+
+type GetPostsForUserAndFeedRow struct {
+	ID            uuid.UUID
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	Title         string
+	Url           string
+	Description   sql.NullString
+	PublishedAt   sql.NullTime
+	FeedID        uuid.UUID
+	ID_2          uuid.NullUUID
+	CreatedAt_2   sql.NullTime
+	UpdatedAt_2   sql.NullTime
+	LastFetchedAt sql.NullTime
+	Name          sql.NullString
+	Url_2         sql.NullString
+	UserID        uuid.NullUUID
+	ID_3          uuid.NullUUID
+	CreatedAt_3   sql.NullTime
+	UpdatedAt_3   sql.NullTime
+	UserID_2      uuid.NullUUID
+	FeedID_2      uuid.NullUUID
+}
+
+func (q *Queries) GetPostsForUserAndFeed(ctx context.Context, arg GetPostsForUserAndFeedParams) ([]GetPostsForUserAndFeedRow, error) {
+	rows, err := q.db.QueryContext(ctx, getPostsForUserAndFeed, arg.UserID, arg.Name, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetPostsForUserAndFeedRow
+	for rows.Next() {
+		var i GetPostsForUserAndFeedRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Title,
+			&i.Url,
+			&i.Description,
+			&i.PublishedAt,
+			&i.FeedID,
+			&i.ID_2,
+			&i.CreatedAt_2,
+			&i.UpdatedAt_2,
+			&i.LastFetchedAt,
+			&i.Name,
+			&i.Url_2,
+			&i.UserID,
+			&i.ID_3,
+			&i.CreatedAt_3,
+			&i.UpdatedAt_3,
+			&i.UserID_2,
+			&i.FeedID_2,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

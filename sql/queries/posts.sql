@@ -12,3 +12,14 @@ ON feeds.id = feed_follows.feed_id
 WHERE feed_follows.user_id = $1
 ORDER BY published_at DESC NULLS LAST
 LIMIT $2;
+
+-- name: GetPostsForUserAndFeed :many
+SELECT * FROM posts
+LEFT JOIN feeds
+ON posts.feed_id = feeds.id
+LEFT JOIN feed_follows
+ON feeds.id = feed_follows.feed_id
+WHERE feed_follows.user_id = $1
+AND feeds.name = $2
+ORDER BY published_at DESC NULLS LAST
+LIMIT $3;
