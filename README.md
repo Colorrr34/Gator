@@ -55,7 +55,7 @@ Here are the commands available in Gator.
 
 `search <searchWord>` - search posts with words in description or title
 
-## flags (For browse and search)
+## Flags (For browse and search)
 
 `-limit` - posts per command
 
