@@ -16,21 +16,21 @@ import (
 	"github.com/google/uuid"
 )
 
-func scrapeFeeds(s *state)error{
+func scrapeFeeds(s *state,ch chan error){
 	ctx:=context.Background()
 	feedNext, err := s.db.GetNextFeedToFetch(ctx)
 	if err != nil{
 		errStr := fmt.Sprintf("Get next feed error: %s", err)
-		return errors.New(errStr)
+		ch <- errors.New(errStr)
 	}
 	if err := s.db.MarkFeedFetched(context.Background(),feedNext.ID); err != nil{
 		errStr := fmt.Sprintf("Mark feed error: %s", err)
-		return errors.New(errStr)
+		ch <- errors.New(errStr)
 	}
 	feed,err := fetchFeed(context.Background(),feedNext.Url)
 	if err != nil{
 		errStr := fmt.Sprintf("Fetch feed error: %s", err)
-		return errors.New(errStr)
+		ch <- errors.New(errStr)
 	}
 	for _, item := range feed.Channel.Item{
 		var description sql.NullString
@@ -44,7 +44,7 @@ func scrapeFeeds(s *state)error{
 		if item.PubDate != ""{
 			timeParsed,err := time.Parse(time.RFC1123Z,item.PubDate)
 			if err !=nil{
-				return err
+				ch <- err
 			}
 			publishedAt = sql.NullTime{
 				Time: timeParsed,
@@ -65,12 +65,12 @@ func scrapeFeeds(s *state)error{
 			if strings.Contains(err.Error(),"posts_url_key"){
 				continue
 			}
-			return err
+			ch <- err
 		}
 		fmt.Println(post)
 	}
 	fmt.Printf("Finished Saving %s\n", feed.Channel.Title)
-	return nil
+	close(ch)
 }
 
 func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error){

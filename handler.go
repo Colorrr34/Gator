@@ -89,8 +89,9 @@ func handlerAgg(s *state, cmd command)error{
 	fmt.Printf("Collecting feeds every %s\n", dur)
 	ticker := time.NewTicker(dur)
 	for ;;<-ticker.C{
-		err := scrapeFeeds(s)
-		if err != nil{
+		errChan := make(chan error)
+		go scrapeFeeds(s,errChan)
+		if err:= <-errChan;err!=nil{
 			return err
 		}
 	}
