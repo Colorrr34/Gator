@@ -11,6 +11,10 @@ import (
 	"github.com/google/uuid"
 )
 
+type printPost struct{
+	Post database.Post
+	FeedName string
+}
 
 func handlerLogin(s *state, cmd command)error{
 	if len(cmd.arg) ==0{
@@ -187,22 +191,15 @@ func handlerUnfollow(s *state, cmd command, user database.User)error{
 func handlerBrowse(s *state, cmd command, user database.User)error{
 	limit := cmd.params.limit
 	feedName := cmd.params.feedName
-		
-	posts := []printPost{}
+	sort := cmd.params.sort
+	page := cmd.params.page
+	is_desc := cmd.params.is_desc
 
-	if feedName == "default" {
-		dbPosts,err:=getPostsForUser(s,user,limit)
-		if err !=nil{
-			return err
-		}
-		posts = dbPosts
-		}else{
-		dbPosts,err:=getPostsForUserAndFeed(s,user,limit,feedName)
-		if err !=nil{
-			return err
-		}
-		posts = dbPosts
+	posts,err := getPosts(s,user,limit,feedName,sort,page,is_desc)
+	if err != nil{
+		return err
 	}
+	
 	for _, post := range posts{
 		fmt.Printf("\n\nTitle: %s\nLink: %s\nDescription: %s\nPublished at: %v\nFeed Name: %s",post.Post.Title,post.Post.Url,post.Post.Description.String,post.Post.PublishedAt.Time, post.FeedName)
 	}

@@ -44,8 +44,10 @@ type RSSItem struct {
 type params struct{
 	limit int
 	feedName string
+	page int
+	sort string
+	is_desc bool
 }
-
 func main(){
 	cfg := config.Read()
 	db, err := sql.Open("postgres", cfg.DbUrl)
@@ -76,7 +78,10 @@ func main(){
 	
 	var params params
 	flag.IntVar(&params.limit,"limit",5,"limit")
-	flag.StringVar(&params.feedName,"feed","default","feed name")
+	flag.StringVar(&params.feedName,"feed","null","feed name")
+	flag.IntVar(&params.page,"page",1,"pagination")
+	flag.StringVar(&params.sort,"sort","published_at","sort")
+	flag.BoolVar(&params.is_desc,"is_desc",true,"order is descending")
 	flag.Parse()
 	args := flag.Args()
 	if len(args)<1{
