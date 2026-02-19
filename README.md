@@ -57,12 +57,12 @@ Here are the commands available in Gator.
 
 ## flags (For browse and search)
 
--limit - posts per command
+`-limit` - posts per command
 
--feed - showing posts of certain feed
+`-feed` - showing posts of certain feed
 
--page - pagination (calculated with limit)
+`-page` - pagination (calculated with limit)
 
--sort - sort by published_at or created_at
+`-sort` - sort by published_at or created_at
 
--is_desc - sort order is descing default true, set order set to ascending if flagged with false
+`-is_desc` - sort order is descing default true, set order set to ascending if flagged with false
