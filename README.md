@@ -52,3 +52,17 @@ Here are the commands available in Gator.
 `agg <time_between_req>` - save all posts in your with a set time <br>
 
 `browse <limit>` - show top posts in your saved posts, default limit is 2
+
+`search <searchWord>` - search posts with words in description or title
+
+## flags (For browse and search)
+
+-limit - posts per command
+
+-feed - showing posts of certain feed
+
+-page - pagination (calculated with limit)
+
+-sort - sort by published_at or created_at
+
+-is_desc - sort order is descing default true, set order set to ascending if flagged with false
