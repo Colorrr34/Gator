@@ -46,7 +46,7 @@ type params struct{
 	feedName string
 	page int
 	sort string
-	is_desc bool
+	isDesc bool
 }
 func main(){
 	cfg := config.Read()
@@ -75,13 +75,14 @@ func main(){
 	(&c).register("following",middlewareLoggedIn(handlerFollowing))
 	(&c).register("unfollow",middlewareLoggedIn(handlerUnfollow))
 	(&c).register("browse",middlewareLoggedIn(handlerBrowse))
+	(&c).register("search",middlewareLoggedIn(handlerSearch))
 	
 	var params params
 	flag.IntVar(&params.limit,"limit",5,"limit")
 	flag.StringVar(&params.feedName,"feed","null","feed name")
 	flag.IntVar(&params.page,"page",1,"pagination")
 	flag.StringVar(&params.sort,"sort","published_at","sort")
-	flag.BoolVar(&params.is_desc,"is_desc",true,"order is descending")
+	flag.BoolVar(&params.isDesc,"is_desc",true,"order is descending")
 	flag.Parse()
 	args := flag.Args()
 	if len(args)<1{

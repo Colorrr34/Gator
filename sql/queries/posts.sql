@@ -21,3 +21,23 @@ ORDER BY
     (CASE WHEN sqlc.arg('sort') = 'published_at' AND NOT sqlc.arg('is_desc')::boolean
         THEN posts.published_at END) ASC NULLS LAST
 LIMIT $2 OFFSET $3;
+
+-- name: SearchPosts :many
+SELECT * FROM posts
+LEFT JOIN feeds
+ON posts.feed_id = feeds.id
+LEFT JOIN feed_follows
+ON feeds.id = feed_follows.feed_id
+WHERE feed_follows.user_id = $1
+AND (feeds.name = sqlc.narg('name') OR sqlc.narg('name') IS NULL)
+AND (posts.title ~* $2 OR posts.description ~* $2)
+ORDER BY 
+    (CASE WHEN sqlc.arg('sort') = 'created_at' AND sqlc.arg('is_desc')::boolean
+        THEN posts.created_at END) DESC NULLS LAST,
+    (CASE WHEN sqlc.arg('sort') = 'created_at' AND NOT sqlc.arg('is_desc')::boolean
+        THEN posts.created_at END) ASC NULLS LAST,
+    (CASE WHEN sqlc.arg('sort') = 'published_at' AND sqlc.arg('is_desc')::boolean
+        THEN posts.published_at END) DESC NULLS LAST,
+    (CASE WHEN sqlc.arg('sort') = 'published_at' AND NOT sqlc.arg('is_desc')::boolean
+        THEN posts.published_at END) ASC NULLS LAST
+LIMIT $3 OFFSET $4;

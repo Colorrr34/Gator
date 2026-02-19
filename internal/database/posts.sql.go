@@ -157,3 +157,109 @@ func (q *Queries) GetPosts(ctx context.Context, arg GetPostsParams) ([]GetPostsR
 	}
 	return items, nil
 }
+
+const searchPosts = `-- name: SearchPosts :many
+SELECT posts.id, posts.created_at, posts.updated_at, title, posts.url, description, published_at, posts.feed_id, feeds.id, feeds.created_at, feeds.updated_at, last_fetched_at, name, feeds.url, feeds.user_id, feed_follows.id, feed_follows.created_at, feed_follows.updated_at, feed_follows.user_id, feed_follows.feed_id FROM posts
+LEFT JOIN feeds
+ON posts.feed_id = feeds.id
+LEFT JOIN feed_follows
+ON feeds.id = feed_follows.feed_id
+WHERE feed_follows.user_id = $1
+AND (feeds.name = $5 OR $5 IS NULL)
+AND (posts.title ~* $2 OR posts.description ~* $2)
+ORDER BY 
+    (CASE WHEN $6 = 'created_at' AND $7::boolean
+        THEN posts.created_at END) DESC NULLS LAST,
+    (CASE WHEN $6 = 'created_at' AND NOT $7::boolean
+        THEN posts.created_at END) ASC NULLS LAST,
+    (CASE WHEN $6 = 'published_at' AND $7::boolean
+        THEN posts.published_at END) DESC NULLS LAST,
+    (CASE WHEN $6 = 'published_at' AND NOT $7::boolean
+        THEN posts.published_at END) ASC NULLS LAST
+LIMIT $3 OFFSET $4
+`
+
+type SearchPostsParams struct {
+	UserID uuid.UUID
+	Title  string
+	Limit  int32
+	Offset int32
+	Name   sql.NullString
+	Sort   interface{}
+	IsDesc bool
+}
+
+type SearchPostsRow struct {
+	ID            uuid.UUID
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	Title         string
+	Url           string
+	Description   sql.NullString
+	PublishedAt   sql.NullTime
+	FeedID        uuid.UUID
+	ID_2          uuid.NullUUID
+	CreatedAt_2   sql.NullTime
+	UpdatedAt_2   sql.NullTime
+	LastFetchedAt sql.NullTime
+	Name          sql.NullString
+	Url_2         sql.NullString
+	UserID        uuid.NullUUID
+	ID_3          uuid.NullUUID
+	CreatedAt_3   sql.NullTime
+	UpdatedAt_3   sql.NullTime
+	UserID_2      uuid.NullUUID
+	FeedID_2      uuid.NullUUID
+}
+
+func (q *Queries) SearchPosts(ctx context.Context, arg SearchPostsParams) ([]SearchPostsRow, error) {
+	rows, err := q.db.QueryContext(ctx, searchPosts,
+		arg.UserID,
+		arg.Title,
+		arg.Limit,
+		arg.Offset,
+		arg.Name,
+		arg.Sort,
+		arg.IsDesc,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SearchPostsRow
+	for rows.Next() {
+		var i SearchPostsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Title,
+			&i.Url,
+			&i.Description,
+			&i.PublishedAt,
+			&i.FeedID,
+			&i.ID_2,
+			&i.CreatedAt_2,
+			&i.UpdatedAt_2,
+			&i.LastFetchedAt,
+			&i.Name,
+			&i.Url_2,
+			&i.UserID,
+			&i.ID_3,
+			&i.CreatedAt_3,
+			&i.UpdatedAt_3,
+			&i.UserID_2,
+			&i.FeedID_2,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

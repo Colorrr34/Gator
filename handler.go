@@ -11,11 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type printPost struct{
-	Post database.Post
-	FeedName string
-}
-
 func handlerLogin(s *state, cmd command)error{
 	if len(cmd.arg) ==0{
 		return errors.New("insufficient arguments")
@@ -193,13 +188,34 @@ func handlerBrowse(s *state, cmd command, user database.User)error{
 	feedName := cmd.params.feedName
 	sort := cmd.params.sort
 	page := cmd.params.page
-	is_desc := cmd.params.is_desc
+	isDesc := cmd.params.isDesc
 
-	posts,err := getPosts(s,user,limit,feedName,sort,page,is_desc)
+	posts,err := getPosts(s,user,limit,feedName,sort,page,isDesc)
 	if err != nil{
 		return err
 	}
 	
+	for _, post := range posts{
+		fmt.Printf("\n\nTitle: %s\nLink: %s\nDescription: %s\nPublished at: %v\nFeed Name: %s",post.Post.Title,post.Post.Url,post.Post.Description.String,post.Post.PublishedAt.Time, post.FeedName)
+	}
+	return nil
+}
+
+func handlerSearch(s *state, cmd command, user database.User)error{
+	if len(cmd.arg)==0{
+		return  errors.New("missing search word")
+	}
+	searchWord := cmd.arg[0]
+	limit := cmd.params.limit
+	feedName := cmd.params.feedName
+	sort := cmd.params.sort
+	page := cmd.params.page
+	isDesc := cmd.params.isDesc
+
+	posts,err := searchPosts(s,user,limit,feedName,sort,page,isDesc,searchWord)
+	if err !=nil{
+		return err
+	}
 	for _, post := range posts{
 		fmt.Printf("\n\nTitle: %s\nLink: %s\nDescription: %s\nPublished at: %v\nFeed Name: %s",post.Post.Title,post.Post.Url,post.Post.Description.String,post.Post.PublishedAt.Time, post.FeedName)
 	}
